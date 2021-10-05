@@ -139,6 +139,10 @@ class Node:
 
         return self.num_entangled_qubits
 
+    def get_entangled_qubits(self):
+
+        return self.entangled_qubits
+
     def print_info(self):
         """
         Prints the general information about the Node.

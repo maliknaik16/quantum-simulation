@@ -168,6 +168,183 @@ class Network:
                     elif k < num_qubits_neighbors_can_entangle:
                         _ = node.entangle_qubits(neighbor)
 
+    def get_entangled_network(self):
+
+        node_count = len(self.nodes)
+
+        new_network = []
+
+        for i in range(node_count):
+
+            row = []
+
+            for j in range(node_count):
+
+                row.append(0)
+
+            new_network.append(row)
+
+
+        for i in range(node_count):
+
+            entangled_qubits = self.nodes[i].get_entangled_qubits()
+
+            for k, v in entangled_qubits.items():
+
+                if v is None:
+                    continue
+
+                linked_node = int(v.split(':')[0])
+
+                new_network[i][linked_node] += 1
+
+        return new_network
+
+    def pair_exists(self, pair, pair_list):
+        """
+        Checks if the pair exists.
+        """
+
+        for p in pair_list:
+
+            if pair[0] == p[1] and pair[1] == p[0]:
+                return True
+
+            if pair[0] == p[0] and pair[1] == p[1]:
+                return True
+
+        return False
+
+    def get_random_sd_pair(self):
+        """
+        Generates a single random SD pair.
+        """
+
+        source = -1
+        dest = -1
+
+        while source == dest or source == dest + 1 or source == dest - 1:
+            source = random.randint(0, len(self.nodes))
+
+            dest = random.randint(0, len(self.nodes))
+
+        pair = (source, dest)
+
+        return pair
+
+    def generate_random_sd_pairs(self, num_pairs = 2):
+        """
+        Generates the random Source-Destination pairs.
+        """
+
+        # Initialize the sd pairs list.
+        sd_pairs = []
+
+        if 2 * num_pairs < len(self.nodes):
+
+            for _ in range(num_pairs):
+
+                # Get a random pair.
+                pair = self.get_random_sd_pair()
+
+                x = 0
+
+                while not self.pair_exists(pair, sd_pairs):
+
+                    if pair not in sd_pairs:
+                        break
+
+                    # Generate new pair when the pair already exists.
+                    pair = self.get_random_sd_pair()
+
+                    if x > 5:
+                        # Break the loop after 5 retries
+                        break
+
+                    x += 1
+
+                sd_pairs.append(pair)
+
+
+        else:
+            print('No such SD pairs')
+
+        return sd_pairs
+
+    def is_connected_network(self, network):
+
+        for i in range(len(network)):
+
+            all_zeroes = False
+
+            for j in range(len(network)):
+
+                if network[i][j] != 0:
+                    break
+
+                if j == len(network) - 1 and network[i][j] == 0:
+                    all_zeroes = True
+
+            if all_zeroes:
+                return False
+
+        return True
+
+    def get_adjacent_nodes(self, node_name, network):
+
+        nds = network[node_name]
+        adjacent_nodes = []
+
+        for node, value in enumerate(nds):
+
+            if value > 0:
+                adjacent_nodes.append(node)
+
+        adjacent_nodes.reverse()
+
+        return adjacent_nodes
+
+    def get_path(self, source, dest):
+        """
+        Returns the path from source to destination.
+        """
+
+        new_network = self.get_entangled_network()
+
+        # visited = [node for node in range(len(self.nodes))]
+        visited = []
+
+        queue = []
+
+        queue.append(source)
+
+        paths = []
+        path = []
+
+        while len(queue) > 0:
+
+            top = queue[0]
+            queue.pop(0)
+
+            if top not in visited:
+                path.append(top)
+                # print(top, end=', ')
+                visited.append(top)
+
+            if top == dest:
+                paths.append(path)
+                path = []
+
+
+            # print('\n\n', top, ' :', self.get_adjacent_nodes(top, new_network))
+            for node in self.get_adjacent_nodes(top, new_network):
+
+                if node not in visited:
+                    queue.append(node)
+
+        print(paths)
+        print(new_network)
+
     def print_network(self):
         """
         Prints the adjacency matrix of the network.
