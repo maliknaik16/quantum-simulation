@@ -9,6 +9,7 @@ class Network:
 
         self.nodes = []
         self.network = []
+        self.paths = []
 
     def get_network(self):
         """
@@ -73,12 +74,17 @@ class Network:
 
         return neighbors
 
-    def build_network(self, min_nodes=4, max_nodes=8):
+    def build_network(self, min_nodes=4, max_nodes=8, min_links=-1):
         """
         Randomly generates the network.
         """
 
+        # print('Min Links:', min_links)
+
         num_nodes = random.randint(min_nodes, max_nodes)
+
+        if min_links == -1:
+            min_links = math.ceil(0.75 * num_nodes)
 
         # Initialize the network with no links.
         for i in range(num_nodes):
@@ -93,10 +99,16 @@ class Network:
         # Randomly assign links between nodes.
         for i in range(num_nodes):
 
+            zero_count = 0
+            assigned = []
+
             for j in range(num_nodes):
 
                 if i == j:
                     self.network[i][j] = 0
+
+                    zero_count += 1
+
                 elif self.network[i][j] == -1:
 
                     link = random.randint(0, 1)
@@ -104,9 +116,32 @@ class Network:
                     self.network[i][j] = link
                     self.network[j][i] = link
 
+                    if link == 0:
+                        zero_count += 1
+
+
+            # print('Zero Count:', zero_count)
+            if zero_count > min_links:
+
+                one_count = zero_count - min_links + 1
+
+                while one_count > 0:
+
+                    node_id = random.randint(0, num_nodes - 1)
+
+                    if node_id not in assigned:
+
+                        assigned.append(node_id)
+                        self.network[i][node_id] = 1
+                        self.network[node_id][i] = 1
+
+                        one_count -= 1
+
+        # self.print_network(self.network)
+
         return self.network
 
-    def assign_qubits(self, min_qubits=2, max_qubits=6):
+    def assign_qubits(self, min_qubits=5, max_qubits=8):
         """
         Randomly assign qubits to the nodes.
         """
@@ -304,57 +339,150 @@ class Network:
 
         return adjacent_nodes
 
-    def get_path(self, source, dest):
+    def update_network(self, path, new_network):
         """
-        Returns the path from source to destination.
+        Removes the entangled link in the network on the path.
         """
 
-        new_network = self.get_entangled_network()
+        for i, node in enumerate(path):
 
-        # visited = [node for node in range(len(self.nodes))]
-        visited = []
+            u = path[i]
+            v = path[i + 1]
 
-        queue = []
+            new_network[u][v] -= 1
+            new_network[v][u] -= 1
 
-        queue.append(source)
+            if i == len(path) - 2:
+                break
 
-        paths = []
+        return new_network
+
+
+    # def get_path(self, source, dest):
+    #     """
+    #     Returns the path from source to destination.
+    #     """
+
+    #     new_network = self.get_entangled_network()
+
+    #     # visited = [node for node in range(len(self.nodes))]
+    #     visited = []
+
+    #     stack = []
+
+    #     stack.append(source)
+
+    #     paths = []
+    #     path = []
+
+    #     while len(stack) > 0:
+
+    #         top = stack[-1]
+    #         # stack.pop()
+
+    #         if top not in visited:
+    #             path.append(top)
+    #             # print(top, end=', ')
+    #             visited.append(top)
+
+    #         if top == dest:
+    #             paths.append(path)
+    #             break
+    #             # path = []
+
+
+    #         adjacent_nodes = self.get_adjacent_nodes(top, new_network)
+    #         # print('\n\n', top, ' :', self.get_adjacent_nodes(top, new_network))
+
+    #         visited_count = 0
+
+    #         for node in adjacent_nodes:
+
+    #             if node in visited:
+    #                 visited_count += 1
+
+    #             if node not in visited:
+    #                 stack.append(node)
+    #                 break
+
+    #         if visited_count == len(adjacent_nodes):
+    #             stack.pop()
+
+    #     print(paths)
+    #     print(new_network)
+
+    def find_paths(self, u, d, new_network, visited, path):
+        """
+        Finds the path from u to d in the network and appends to the paths list.
+        """
+
+        # Mark the current node as visited.
+        visited[u] = True
+
+        # Append the current node to path list.
+        path.append(u)
+
+        # If current node is the destination then append to the paths list.
+        if u == d:
+
+            self.paths.append(list(path))
+
+        else:
+
+            for i in self.get_adjacent_nodes(u, new_network):
+
+                if visited[i] == False:
+
+                    self.find_paths(i, d, new_network, visited, path)
+
+        # Pop current node from the path.
+        path.pop()
+
+        # Mark the current node as unvisited.
+        visited[u] = False
+
+
+    def get_paths(self, s, d, new_network):
+        """
+        Returns all path from source to destination.
+        """
+
+        # Mark all nodes as unvisited
+        visited = [False] * (len(self.nodes))
+
+        # Initialize the path array.
         path = []
 
-        while len(queue) > 0:
+        self.paths = []
 
-            top = queue[0]
-            queue.pop(0)
+        # Recursively find paths.
+        self.find_paths(s, d, new_network, visited, path)
 
-            if top not in visited:
-                path.append(top)
-                # print(top, end=', ')
-                visited.append(top)
-
-            if top == dest:
-                paths.append(path)
-                path = []
+        return self.paths
 
 
-            # print('\n\n', top, ' :', self.get_adjacent_nodes(top, new_network))
-            for node in self.get_adjacent_nodes(top, new_network):
-
-                if node not in visited:
-                    queue.append(node)
-
-        print(paths)
-        print(new_network)
-
-    def print_network(self):
+    def print_network(self, nwk = None):
         """
         Prints the adjacency matrix of the network.
         """
 
-        num_nodes = self.get_num_nodes()
+        num_nodes = 0
+
+        if nwk is None:
+            num_nodes = self.get_num_nodes()
+        else:
+            num_nodes = len(nwk)
+
 
         for i in range(num_nodes):
 
             for j in range(num_nodes):
-                print(self.network[i][j], end='\t')
+
+                if nwk is None:
+
+                    print(self.network[i][j], end='\t')
+
+                else:
+                    print(nwk[i][j], end='\t')
 
             print('')
