@@ -84,7 +84,7 @@ class Network:
         num_nodes = random.randint(min_nodes, max_nodes)
 
         if min_links == -1:
-            min_links = math.ceil(0.75 * num_nodes)
+            min_links = math.ceil(0.5 * num_nodes)
 
         # Initialize the network with no links.
         for i in range(num_nodes):
@@ -240,13 +240,13 @@ class Network:
         Checks if the pair exists.
         """
 
-        for p in pair_list:
+        # for p in pair_list:
 
-            if pair[0] == p[1] and pair[1] == p[0]:
-                return True
+        #     if pair[0] == p[1] and pair[1] == p[0]:
+        #         return True
 
-            if pair[0] == p[0] and pair[1] == p[1]:
-                return True
+        #     if pair[0] == p[0] and pair[1] == p[1]:
+        #         return True
 
         return False
 
@@ -259,15 +259,15 @@ class Network:
         dest = -1
 
         while source == dest or source == dest + 1 or source == dest - 1:
-            source = random.randint(0, len(self.nodes))
+            source = random.randint(0, len(self.nodes) - 1)
 
-            dest = random.randint(0, len(self.nodes))
+            dest = random.randint(0, len(self.nodes) - 1)
 
         pair = (source, dest)
 
         return pair
 
-    def generate_random_sd_pairs(self, num_pairs = 2):
+    def generate_random_sd_pairs(self, num_pairs, new_network):
         """
         Generates the random Source-Destination pairs.
         """
@@ -286,13 +286,13 @@ class Network:
 
                 while not self.pair_exists(pair, sd_pairs):
 
-                    if pair not in sd_pairs:
+                    if pair not in sd_pairs and len(self.get_paths(pair[0], pair[1], new_network)) > 0:
                         break
 
                     # Generate new pair when the pair already exists.
                     pair = self.get_random_sd_pair()
 
-                    if x > 5:
+                    if x > 10:
                         # Break the loop after 5 retries
                         break
 

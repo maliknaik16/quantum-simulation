@@ -64,7 +64,7 @@ def run_sequential_multipath(save_figure = False):
     x = 10
     increment = 10
 
-    while x < 400:
+    while x < 60:
     # for x in range(10, 20, 10):
 
         exception = False
@@ -76,7 +76,7 @@ def run_sequential_multipath(save_figure = False):
             network = Network()
 
             network.build_network(x, x)
-            network.assign_qubits()
+            network.assign_qubits(9, x)
             network.entangle_qubits_in_network()
 
             # Get nodes.
@@ -114,7 +114,7 @@ def run_sequential_multipath(save_figure = False):
 
             # Randomly generate the demands.
             # D = network.generate_random_sd_pairs(random.randint(2, 4))
-            D = network.generate_random_sd_pairs(1)
+            D = network.generate_random_sd_pairs(1, updated_network_copy)
 
             num_sd_pairs = len(D)
 
@@ -138,6 +138,7 @@ def run_sequential_multipath(save_figure = False):
             results["max_num_entangled_qubits"].append(max_num_entangled_qubits)
             results["k"].append(k)
 
+            print(results)
         except:
             exception = True
 
@@ -146,6 +147,7 @@ def run_sequential_multipath(save_figure = False):
         if not exception:
             x += increment
 
-    df = pd.DataFrame(results)
-    df.to_csv("results/sequential_multipath/test_1.csv", index=False)
+    # print(results)
+    # df = pd.DataFrame(results)
+    # df.to_csv("results/sequential_multipath/test_1.csv", index=False)
 
