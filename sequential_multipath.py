@@ -61,10 +61,10 @@ def run_sequential_multipath(save_figure = False):
         "k": []
     }
 
-    x = 10
-    increment = 10
+    x = 8
+    increment = 2
 
-    while x < 400:
+    while x < 33:
     # for x in range(10, 20, 10):
 
         exception = False
@@ -123,7 +123,7 @@ def run_sequential_multipath(save_figure = False):
             if save_figure:
                 labels = get_labels(nodes)
 
-                G = nx.from_numpy_matrix(np.array(updated_network))
+                G = nx.from_numpy_array(np.array(updated_network))
 
                 nx.draw(G, node_color='#f3f3f3ff', edgecolors='#3d85c6', font_size=12, labels=labels, edge_color='#cc0000', with_labels=True, style='--', node_size=2000)
 
